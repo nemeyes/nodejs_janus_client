@@ -101,7 +101,7 @@ function listCooperation(client) {
                     var roomList = result.list;
                     var rooms = [];
                     for(let i=0; i<roomList.length; i++) {
-                        rooms.push(roomList[i].room);
+                        rooms.push({ 'id' : roomList[i].room, 'max_publishers' : roomList[i].max_publishers, 'num_participants' : roomList[i].num_participants });
                         //console.log("room[" + roomList[i].room + "] is exist");
                     }
                     resolve(rooms);
