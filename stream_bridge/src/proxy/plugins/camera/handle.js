@@ -20,7 +20,8 @@ class CameraHandle extends PluginHandle {
             }, options);
             this.requestMessage(message).then((res)=>{
                 resolve({
-                    id: res.getData().created,
+		    id: res.getData().stream.id,
+                    name: res.getData().created,
                     response: res
                 });
             }).catch((err) => { 
@@ -37,6 +38,25 @@ class CameraHandle extends PluginHandle {
             this.requestMessage(message).then((res)=>{
                 resolve({
                     id: res.getData().destroyed,
+                    response: res
+                });
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    }
+
+    info(options) {
+        return new Promise((resolve, reject)=>{
+            let message = _.merge({
+                request: 'info'
+            }, options);
+            this.requestMessage(message).then((res)=>{
+                resolve({
+                    id: res.getData().info.id,
+                    name: res.getData().info.name,
+                    description: res.getData().info.description,
+                    url: res.getData().info.url,
                     response: res
                 });
             }).catch((err) => {

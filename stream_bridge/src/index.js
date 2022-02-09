@@ -3,7 +3,7 @@ const express  = require('express');
 const Cam = require('onvif').Cam;
 const app = express();
 
-function createCamera(client, url, description, pin) {
+function createCamera(client, name, url, description, pin) {
     return new Promise((resolve, reject) => {
         client.onConnected(()=>{
             client.createSession().then((session)=>{
@@ -12,38 +12,37 @@ function createCamera(client, url, description, pin) {
 
                 if(!pin) {
                     cameraHandle.create({
+			"name": name,
                         "url": url,
                         "description": description,
                     }).then((result) => {
-                        var id = result.id;
-                        console.log("add camera["+ id +"] is completed"); 
-						var value = {code: "success", id: id};
-						resolve(value);
+                        console.log("add camera["+ result.id +"] is completed"); 
+			var value = {code: "success", id: result.id, name: result.name};
+			resolve(value);
                     }).catch((err) => {
                         //console.log("Room is already Exist");
                         //console.log(err);
-						var value = {code: "fail", id: -1};
+			var value = {code: "fail", id: -1};
                         resolve(value);
                     });
                 } else {
                     console.log("create with pin " + pin);
                     cameraHandle.create({
+			"name": name,
                         "url": url,
                         "description": description,
                         "pin": pin
                     }).then((result) => {
-                        var id = result.id;
                         console.log("add camera["+ id +"] is completed"); 
-						var value = {code: "success", id: id};
+			var value = {code: "success", id: result.id, name: result.name};
                         resolve(value);
                     }).catch((err) => {
-						//console.log(err);
+			//console.log(err);
                         //console.log("Room is already Exist");
-						var value = {code: "fail", id: -1};
+			var value = {code: "fail", id: -1};
                         resolve(value);
                     });                
-				}
-
+		}
 
             }).catch((err) => {
                 reject(err);
@@ -73,6 +72,33 @@ function destroyCamera(client, id) {
                     resolve("success");
                 }).catch((err) => {
                     resolve("nocamera");
+                });
+            }).catch((err) => {
+                reject(err);
+            })
+        });
+        client.onDisconnected(() => {
+            //console.log("onDisconnected"); 
+         });
+         
+         client.onError((err) => {
+             console.log(err); 
+         });
+    });
+}
+
+function getCamera(client, id) {
+    return new Promise((resolve, reject) => {
+        client.onConnected(()=>{
+            client.createSession().then((session)=>{
+                return session.camera().createCameraHandle();
+            }).then((cameraHandle) => {
+                cameraHandle.info({
+                    "id": id
+                }).then((result) => {
+                    resolve({code: "success", id: result.id, name: result.name, description: result.description, url: result.url});
+                }).catch((err) => {
+                    resolve({code: "nocamera"});
                 });
             }).catch((err) => {
                 reject(err);
@@ -198,14 +224,14 @@ app.post("/PTZ/SetHomePosition", (req, res) => {
 });
 
 app.post('/Camera/Add', (req, res) => {
-    const { url, description, pin } = req.body;
+    const { name, url, description, pin } = req.body;
 
     let client = new Client({
-        url: 'ws://3.37.150.90:8188'
+        url: 'ws://127.0.0.1:8188'
     });
-    createCamera(client, url, description, pin)
+    createCamera(client, name, url, description, pin)
         .then((value) => {
-            res.json({"code": value.code, "id": value.id});
+            res.json(value);
             client.disconnect();
         });
 
@@ -216,7 +242,7 @@ app.post('/Camera/Remove', (req, res) => {
     const { id } = req.body;
 
     let client = new Client({
-        url: 'ws://3.37.150.90:8188'
+        url: 'ws://127.0.0.1:8188'
     });
 	console.log("Camera/Remove");
     destroyCamera(client, id)
@@ -228,10 +254,25 @@ app.post('/Camera/Remove', (req, res) => {
     client.connect();
 });
 
+app.post('/Camera/Info', (req, res) => {
+    const { id } = req.body;
+
+    let client = new Client({
+        url: 'ws://127.0.0.1:8188'
+    });
+    getCamera(client, id)
+        .then((value) => {
+            res.json(value);
+            client.disconnect();
+        });
+
+    client.connect();
+});
+
 app.get('/Camera/List', (req, res) => {
 
     let client = new Client({
-        url: 'ws://3.37.150.90:8188'
+        url: 'ws://127.0.0.1:8188'
     });
     listCamera(client)
         .then((value) => {

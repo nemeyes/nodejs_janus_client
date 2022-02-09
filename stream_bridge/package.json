@@ -19,6 +19,7 @@
     "morgan": "^1.10.0",
     "npm-check-updates": "^11.8.5",
     "onvif": "github:agsh/onvif",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "ws": "^8.2.3"
   }
 }
